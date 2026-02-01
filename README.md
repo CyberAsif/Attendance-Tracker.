@@ -1,2 +1,841 @@
 # Attendance-Tracker.
 Track your attendance !
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2vw;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: clamp(1.2em, 4vw, 2em);
+            margin-bottom: 10px;
+        }
+
+        .today-date {
+            font-size: clamp(0.9em, 3vw, 1.3em);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: clamp(0.85em, 2.5vw, 1em);
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .nav-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .content {
+            padding: 3vw;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .add-subject {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], input[type="date"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: clamp(0.9em, 2.5vw, 1em);
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(0.9em, 2.5vw, 1em);
+            cursor: pointer;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 2vw 1vw;
+            text-align: left;
+            font-weight: 600;
+            font-size: clamp(0.75em, 2vw, 1em);
+        }
+
+        td {
+            padding: 2vw 1vw;
+            border-bottom: 1px solid #e9ecef;
+            font-size: clamp(0.8em, 2vw, 1em);
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .second-row {
+            border-bottom: 2px solid #667eea !important;
+        }
+
+        .second-row td {
+            border-bottom: 2px solid #667eea !important;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1.5vw;
+            flex-wrap: wrap;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5vw;
+            cursor: pointer;
+            font-size: clamp(0.75em, 2vw, 1em);
+            white-space: nowrap;
+        }
+
+        input[type="radio"] {
+            cursor: pointer;
+            width: clamp(16px, 3vw, 20px);
+            height: clamp(16px, 3vw, 20px);
+            flex-shrink: 0;
+        }
+
+        .percentage {
+            font-weight: bold;
+            font-size: clamp(1em, 2.5vw, 1.2em);
+        }
+
+        .percentage.good {
+            color: #48bb78;
+        }
+
+        .percentage.warning {
+            color: #ed8936;
+        }
+
+        .percentage.danger {
+            color: #e53e3e;
+        }
+
+        .delete-btn {
+            background: #e53e3e;
+            padding: 1.5vw 3vw;
+            font-size: clamp(0.8em, 2vw, 0.9em);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-input {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        select {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: clamp(0.9em, 2.5vw, 1em);
+            flex: 1;
+            min-width: 150px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .history-display {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .history-display h3 {
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            background: none;
+            color: #6c757d;
+            font-size: clamp(0.7em, 2vw, 0.85em);
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: clamp(1.2em, 4vw, 1.5em);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .container {
+            margin-bottom: 70px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .todo-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .todo-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .news-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .news-date {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .routine-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .routine-table th, .routine-table td {
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            text-align: center;
+            font-size: clamp(0.75em, 2vw, 0.9em);
+        }
+
+        .routine-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .admin-btn {
+            background: #ed8936;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: clamp(0.9em, 2.5vw, 1em);
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        @media (min-width: 768px) {
+            .content {
+                padding: 30px;
+            }
+
+            th, td {
+                padding: 15px;
+            }
+
+            .radio-group {
+                gap: 10px;
+            }
+
+            .radio-group label {
+                gap: 5px;
+            }
+
+            .delete-btn {
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="headerTitle">📚 Attendance Tracker</h1>
+            <div class="today-date" id="todayDate"></div>
+        </div>
+
+        <div class="content">
+            <!-- ATTENDANCE TAB -->
+            <div id="attendanceTab" class="tab-content active">
+                <div class="add-subject">
+                    <input type="text" id="subjectName" placeholder="Add new subject">
+                    <button onclick="addSubject()">Add Subject</button>
+                </div>
+
+                <div id="todayTable">
+                    <div class="empty-state">
+                        <h3>No subjects added yet</h3>
+                        <p>Add your first subject to start tracking</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROUTINE TAB -->
+            <div id="routineTab" class="tab-content">
+                <button class="admin-btn" onclick="toggleRoutineAdmin()">Admin Mode</button>
+                <div id="routineAdminSection" style="display: none;">
+                    <h3>Add Routine Entry</h3>
+                    <input type="text" id="routineDay" placeholder="Day (e.g., Monday)">
+                    <input type="text" id="routineTime" placeholder="Time (e.g., 9 AM)">
+                    <input type="text" id="routineSubject" placeholder="Subject">
+                    <button onclick="addRoutineEntry()">Add Entry</button>
+                </div>
+                <div id="routineDisplay"></div>
+            </div>
+
+            <!-- TO-DO TAB -->
+            <div id="todoTab" class="tab-content">
+                <div class="add-subject">
+                    <input type="text" id="todoInput" placeholder="Add new task">
+                    <button onclick="addTodo()">Add</button>
+                </div>
+                <div id="todoList"></div>
+            </div>
+
+            <!-- NEWS TAB -->
+            <div id="newsTab" class="tab-content">
+                <button class="admin-btn" onclick="toggleNewsAdmin()">Admin Mode</button>
+                <div id="newsAdminSection" style="display: none;">
+                    <h3>Post News</h3>
+                    <input type="text" id="newsTitle" placeholder="News title">
+                    <textarea id="newsContent" placeholder="News content"></textarea>
+                    <button onclick="addNews()">Post News</button>
+                </div>
+                <div id="newsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('attendance')">
+            <span class="nav-icon">📊</span>
+            Attendance
+        </button>
+        <button class="nav-item" onclick="switchTab('routine')">
+            <span class="nav-icon">📅</span>
+            Routine
+        </button>
+        <button class="nav-item" onclick="switchTab('todo')">
+            <span class="nav-icon">✓</span>
+            To-Do
+        </button>
+        <button class="nav-item" onclick="switchTab('news')">
+            <span class="nav-icon">📰</span>
+            News
+        </button>
+    </div>
+
+    <script>
+        let subjects = [];
+        let routine = [];
+        let todos = [];
+        let news = [];
+        let isRoutineAdmin = false;
+        let isNewsAdmin = false;
+        const ADMIN_PASSWORD = "admin123"; // Change this!
+
+        window.onload = function() {
+            loadData();
+            updateTodayDate();
+            renderAttendance();
+            renderRoutine();
+            renderTodos();
+            renderNews();
+        };
+
+        function loadData() {
+            const savedSubjects = localStorage.getItem('attendanceData');
+            const savedRoutine = localStorage.getItem('routineData');
+            const savedTodos = localStorage.getItem('todoData');
+            const savedNews = localStorage.getItem('newsData');
+            
+            if (savedSubjects) subjects = JSON.parse(savedSubjects);
+            if (savedRoutine) routine = JSON.parse(savedRoutine);
+            if (savedTodos) todos = JSON.parse(savedTodos);
+            if (savedNews) news = JSON.parse(savedNews);
+        }
+
+        function saveData() {
+            localStorage.setItem('attendanceData', JSON.stringify(subjects));
+            localStorage.setItem('routineData', JSON.stringify(routine));
+            localStorage.setItem('todoData', JSON.stringify(todos));
+            localStorage.setItem('newsData', JSON.stringify(news));
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if (tab === 'attendance') {
+                document.getElementById('attendanceTab').classList.add('active');
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                document.getElementById('headerTitle').textContent = '📚 Attendance Tracker';
+            } else if (tab === 'routine') {
+                document.getElementById('routineTab').classList.add('active');
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                document.getElementById('headerTitle').textContent = '📅 Routine';
+            } else if (tab === 'todo') {
+                document.getElementById('todoTab').classList.add('active');
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
+                document.getElementById('headerTitle').textContent = '✓ To-Do List';
+            } else if (tab === 'news') {
+                document.getElementById('newsTab').classList.add('active');
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
+                document.getElementById('headerTitle').textContent = '📰 News';
+            }
+        }
+
+        function updateTodayDate() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('todayDate').textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // ATTENDANCE FUNCTIONS
+        function addSubject() {
+            const name = document.getElementById('subjectName').value.trim();
+            if (!name) {
+                alert('Please enter a subject name');
+                return;
+            }
+            subjects.push({ id: Date.now(), name: name, records: [] });
+            document.getElementById('subjectName').value = '';
+            saveData();
+            renderAttendance();
+        }
+
+        function markTodayAttendance(id, status) {
+            const subject = subjects.find(s => s.id === id);
+            const today = getTodayString();
+            const todayObj = new Date();
+            const existingIndex = subject.records.findIndex(r => r.date === today);
+            
+            if (existingIndex >= 0) {
+                subject.records[existingIndex].status = status;
+            } else {
+                subject.records.push({
+                    date: today,
+                    day: todayObj.toLocaleDateString('en-US', { weekday: 'long' }),
+                    status: status
+                });
+            }
+            saveData();
+            renderAttendance();
+        }
+
+        function deleteSubject(id) {
+            if (confirm('Delete this subject?')) {
+                subjects = subjects.filter(s => s.id !== id);
+                saveData();
+                renderAttendance();
+            }
+        }
+
+        function calculatePercentage(records) {
+            if (records.length === 0) return 0;
+            const present = records.filter(r => r.status === 'P').length;
+            return ((present / records.length) * 100).toFixed(1);
+        }
+
+        function getPercentageClass(percentage) {
+            if (percentage >= 75) return 'good';
+            if (percentage >= 60) return 'warning';
+            return 'danger';
+        }
+
+        function renderAttendance() {
+            const container = document.getElementById('todayTable');
+            if (subjects.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No subjects added yet</h3></div>';
+                return;
+            }
+
+            const today = getTodayString();
+            let tableHTML = '<div class="table-wrapper"><table><thead><tr><th>Subject</th><th>Mark</th><th>P</th><th>A</th><th>Total</th></tr></thead><tbody>';
+
+            subjects.forEach(subject => {
+                const present = subject.records.filter(r => r.status === 'P').length;
+                const absent = subject.records.filter(r => r.status === 'A').length;
+                const total = subject.records.length;
+                const percentage = calculatePercentage(subject.records);
+                const percentClass = getPercentageClass(percentage);
+                const todayRecord = subject.records.find(r => r.date === today);
+                const todayStatus = todayRecord ? todayRecord.status : null;
+
+                tableHTML += `
+                    <tr>
+                        <td><strong>${subject.name}</strong></td>
+                        <td>
+                            <div class="radio-group">
+                                <label><input type="radio" name="att_${subject.id}" ${todayStatus === 'P' ? 'checked' : ''} onclick="markTodayAttendance(${subject.id}, 'P')">P</label>
+                                <label><input type="radio" name="att_${subject.id}" ${todayStatus === 'A' ? 'checked' : ''} onclick="markTodayAttendance(${subject.id}, 'A')">A</label>
+                            </div>
+                        </td>
+                        <td>${present}</td>
+                        <td>${absent}</td>
+                        <td>${total}</td>
+                    </tr>
+                    <tr class="second-row">
+                        <td colspan="5" style="padding: 8px 10px; background: #f8f9fa;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em;">
+                                <div><strong>%:</strong> <span class="percentage ${percentClass}">${percentage}%</span></div>
+                                <button class="delete-btn" onclick="deleteSubject(${subject.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table></div>';
+            container.innerHTML = tableHTML;
+        }
+
+        // ROUTINE FUNCTIONS
+        function toggleRoutineAdmin() {
+            if (!isRoutineAdmin) {
+                const password = prompt('Enter admin password:');
+                if (password === ADMIN_PASSWORD) {
+                    isRoutineAdmin = true;
+                    document.getElementById('routineAdminSection').style.display = 'block';
+                } else {
+                    alert('Incorrect password');
+                }
+            } else {
+                isRoutineAdmin = false;
+                document.getElementById('routineAdminSection').style.display = 'none';
+            }
+        }
+
+        function addRoutineEntry() {
+            const day = document.getElementById('routineDay').value.trim();
+            const time = document.getElementById('routineTime').value.trim();
+            const subject = document.getElementById('routineSubject').value.trim();
+            
+            if (!day || !time || !subject) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            routine.push({ id: Date.now(), day, time, subject });
+            document.getElementById('routineDay').value = '';
+            document.getElementById('routineTime').value = '';
+            document.getElementById('routineSubject').value = '';
+            saveData();
+            renderRoutine();
+        }
+
+        function deleteRoutineEntry(id) {
+            if (!isRoutineAdmin) {
+                alert('Admin mode required');
+                return;
+            }
+            routine = routine.filter(r => r.id !== id);
+            saveData();
+            renderRoutine();
+        }
+
+        function renderRoutine() {
+            const container = document.getElementById('routineDisplay');
+            if (routine.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No routine entries</h3></div>';
+                return;
+            }
+
+            const grouped = {};
+            routine.forEach(r => {
+                if (!grouped[r.day]) grouped[r.day] = [];
+                grouped[r.day].push(r);
+            });
+
+            let html = '';
+            Object.keys(grouped).forEach(day => {
+                html += `<h3 style="margin-top: 20px;">${day}</h3>`;
+                html += '<table class="routine-table"><tr><th>Time</th><th>Subject</th>';
+                if (isRoutineAdmin) html += '<th>Action</th>';
+                html += '</tr>';
+                
+                grouped[day].forEach(entry => {
+                    html += `<tr><td>${entry.time}</td><td>${entry.subject}</td>`;
+                    if (isRoutineAdmin) html += `<td><button class="delete-btn" onclick="deleteRoutineEntry(${entry.id})">Del</button></td>`;
+                    html += '</tr>';
+                });
+                html += '</table>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        // TO-DO FUNCTIONS
+        function addTodo() {
+            const text = document.getElementById('todoInput').value.trim();
+            if (!text) return;
+            todos.push({ id: Date.now(), text, completed: false });
+            document.getElementById('todoInput').value = '';
+            saveData();
+            renderTodos();
+        }
+
+        function toggleTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            todo.completed = !todo.completed;
+            saveData();
+            renderTodos();
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveData();
+            renderTodos();
+        }
+
+        function renderTodos() {
+            const container = document.getElementById('todoList');
+            if (todos.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No tasks yet</h3></div>';
+                return;
+            }
+
+            let html = '';
+            todos.forEach(todo => {
+                html += `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
+                        <span style="flex: 1;">${todo.text}</span>
+                        <button class="delete-btn" onclick="deleteTodo(${todo.id})">Del</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // NEWS FUNCTIONS
+        function toggleNewsAdmin() {
+            if (!isNewsAdmin) {
+                const password = prompt('Enter admin password:');
+                if (password === ADMIN_PASSWORD) {
+                    isNewsAdmin = true;
+                    document.getElementById('newsAdminSection').style.display = 'block';
+                } else {
+                    alert('Incorrect password');
+                }
+            } else {
+                isNewsAdmin = false;
+                document.getElementById('newsAdminSection').style.display = 'none';
+            }
+        }
+
+        function addNews() {
+            const title = document.getElementById('newsTitle').value.trim();
+            const content = document.getElementById('newsContent').value.trim();
+            
+            if (!title || !content) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            news.unshift({ id: Date.now(), title, content, date });
+            document.getElementById('newsTitle').value = '';
+            document.getElementById('newsContent').value = '';
+            saveData();
+            renderNews();
+        }
+
+        function deleteNews(id) {
+            if (!isNewsAdmin) {
+                alert('Admin mode required');
+                return;
+            }
+            news = news.filter(n => n.id !== id);
+            saveData();
+            renderNews();
+        }
+
+        function renderNews() {
+            const container = document.getElementById('newsList');
+            if (news.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No news posted</h3></div>';
+                return;
+            }
+
+            let html = '';
+            news.forEach(item => {
+                html += `
+                    <div class="news-item">
+                        <div class="news-date">${item.date}</div>
+                        <h3>${item.title}</h3>
+                        <p>${item.content}</p>
+                        ${isNewsAdmin ? `<button class="delete-btn" onclick="deleteNews(${item.id})">Delete</button>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
